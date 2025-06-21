@@ -1,9 +1,12 @@
 #ifndef RESPONSE_H
 #define RESPONSE_H
 
-char *form_header(char *request);
-char *form_body(char *request);
-char *form_response(char *request);
-int send_response(int sock_fd, char *request);
+#include "request.h"
+
+char *form_header(HttpRequest request);
+char *form_body(HttpRequest request);
+char *form_response(HttpRequest request);
+int send_response(int sock_fd, HttpRequest request);
+void print_info(HttpRequest request);
 
 #endif

@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 
 
+#include "../include/request.h"
 #include "../include/response.h"
 
 
@@ -58,17 +59,19 @@ void start_ipv4(int port) {
         printf("[DEBUG] Accepted connection.\n");
 
         // read
-        char response[1024];
-        ssize_t bytes_received = read(client_fd, response, sizeof(response) - 1);
+        char request[1024];
+        ssize_t bytes_received = read(client_fd, request, sizeof(request) - 1);
 
         if (bytes_received < 0) {
             perror("read Failed: ");
             break;
         } else {
-            response[bytes_received] = '\0';
-            printf("Received: %s\n", response);
-            
-            send_response(client_fd, response);
+            request[bytes_received] = '\0';
+            HttpRequest req = parse_request(request);
+
+            print_info(req);
+
+            send_response(client_fd, req);
         }
 
         printf("[DEUBG] Respone sent.\n");
@@ -125,7 +128,7 @@ void start_ipv6(int port) {
             break;
         } else {
             response[bytes_received] = '\0';
-            printf("Received: %s\n", response);
+            printf("[DEBUG] Request: %s\n\n", response);
         }
     }
 
