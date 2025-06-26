@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -13,8 +14,6 @@ Route routes[] = {
     { HEAD, get_or_head },
     { CONNECT, not_supported },
     { DELETE, not_supported },
-    { GET, not_supported },
-    { HEAD, not_supported },
     { OPTIONS, not_supported },
     { PATCH, not_supported },
     { POST, not_supported },
@@ -27,12 +26,13 @@ Route routes[] = {
 char *route_request(HttpRequest *request, HttpResponse *response) {
     for (int i = 0; routes[i].method != INVALID; i++) {
         if (routes[i].method == request->method) {
+            printf("[DEBUG] Handling method: %d with %p\n", request->method, routes[i].handler);
             return routes[i].handler(request, response);
         }
     }
 
     response->header.status_code = 404;
-    return "";
+    return NULL;
 }
 
 
@@ -41,18 +41,16 @@ char *get_or_head(HttpRequest *request, HttpResponse *response) {
     if (getcwd(path, sizeof(path)) == NULL) {
         response->header.status_code = 500;
         fprintf(stderr, "[ERROR] Could not get current working directory.\n");
-        return "";
+        return NULL;
     }
 
     if (strlen(path) + strlen(request->path) >= sizeof(path)) {
         response->header.status_code = 500;
         fprintf(stderr, "[ERROR] Path too long.\n");
-        return "";
+        return NULL;
     }
 
     strcat(path, request->path);
-
-    printf("[DEBUG] Path requested: %s\n", path);
 
     FILE *fp = fopen(path, "r");
 
@@ -74,27 +72,24 @@ char *get_or_head(HttpRequest *request, HttpResponse *response) {
                 response->header.status_code = 500;
                 break;
         }
-        perror("[DEBUG] File could not be opened.");
-        return "";
+        return NULL;
     }
 
     int size = get_file_size(fp);
-
-    printf("[DEBUG] File opened. Size = %d\n", size);
 
     char *body = malloc(size + 1);
     if (!(body)) {
         response->header.status_code = 500;
         fprintf(stderr, "[ERROR] Could not allocate memory.\n");
         fclose(fp);
-        return "";
+        return NULL;
     }
 
     response->header.status_code = 200;
     response->header.content_length = size;
 
     if (request->method == HEAD) {
-        strcpy(body, "");
+        body = NULL;
     } else {
         size_t bytes_read = fread(body, 1, size, fp);
         if (bytes_read == 0 && !feof(fp)) {
@@ -118,14 +113,25 @@ char *invalid(HttpRequest *request, HttpResponse *response) {
           "\t\"message\": \"Request body could not be read properly.\","
         "}";
 
-    return error;
+    size_t len = strlen(error);
+
+    char *body = malloc(len + 1);
+    if (!body) {
+        response->header.status_code = 500;
+        fprintf(stderr, "[ERROR] Could not allocate memory.\n");
+        return NULL;
+    }
+
+    strcpy(body, error);
+
+    return body;
 }
 
 
 char *not_supported(HttpRequest *request, HttpResponse *response) {
     response->header.status_code = 501;
     
-    char *error = "";
-    
-    return error;
+    char *body = NULL;
+
+    return body;
 }

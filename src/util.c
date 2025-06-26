@@ -27,9 +27,8 @@ int str_to_int(char *input) {
 
 
 int get_file_size(FILE *fp) {
-    printf("[DEBUG] in `get_file_size`.\n");
     fseek(fp, 0, SEEK_END);
-    int size = ftell(fp) + 1;
+    int size = ftell(fp);
     rewind(fp);
 
     return size;
