@@ -17,7 +17,7 @@ void start_ipv4(int port) {
     int fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (fd == -1) {
-        perror("Error: ");
+        perror("[ERROR]");
         exit(EXIT_FAILURE);
     }
 
@@ -32,49 +32,39 @@ void start_ipv4(int port) {
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     if (bind(fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-        perror("bind Failed: ");
+        perror("[FAIL] `bind`: ");
         exit(EXIT_FAILURE);
     }
 
-    printf("[DEBUG] binded to: %d:%d\n", server_addr.sin_addr.s_addr, server_addr.sin_port);
-
     if (listen(fd, 1) < 0) {
-        perror("listen Failed: ");
+        perror("[FAIL] `listen`: ");
         exit(EXIT_FAILURE);
     }
     
-    printf("[DEBUG] Listening...\n");
-
     while (1) {
 
         socklen_t addr_len = sizeof(server_addr);
         int client_fd = accept(fd, (struct sockaddr *) &server_addr, &addr_len);
 
         if (client_fd == -1) {
-            perror("accept Failed: ");
+            perror("[FAIL] `accept`: ");
             close(client_fd);
-            break;
+            continue;
         }
-
-        printf("[DEBUG] Accepted connection.\n");
 
         // read
         char request[1024];
         ssize_t bytes_received = read(client_fd, request, sizeof(request) - 1);
 
         if (bytes_received < 0) {
-            perror("read Failed: ");
+            perror("[FAIL] `read`: ");
             break;
         } else {
             request[bytes_received] = '\0';
             HttpRequest req = parse_request(request);
 
-            print_info(req);
-
             send_response(client_fd, req);
         }
-
-        printf("[DEUBG] Respone sent.\n");
     }
 
     close(fd);

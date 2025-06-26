@@ -1,9 +1,5 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <string.h>
-#include <stdlib.h>
-
-#include <sys/socket.h>
 
 #include "../include/request.h"
 
@@ -23,7 +19,7 @@ METHOD get_method(const char *method) {
 }
 
 HttpRequest parse_request(const char *request) {
-    HttpRequest req = {0};
+    HttpRequest req = {};
 
     char buffer[1024];
     strncpy(buffer, request, sizeof(buffer) - 1);
@@ -44,7 +40,8 @@ HttpRequest parse_request(const char *request) {
 
     invalid:
         fprintf(stderr, "[ERROR] Invalid Request.\n");
-        exit(1);
+        req.method = INVALID;
+        return req;
 }
 
 

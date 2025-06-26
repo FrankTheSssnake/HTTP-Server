@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <fcntl.h>
 
 
 int str_to_int(char *input) {
@@ -23,3 +25,12 @@ int str_to_int(char *input) {
     return output;
 }
 
+
+int get_file_size(FILE *fp) {
+    printf("[DEBUG] in `get_file_size`.\n");
+    fseek(fp, 0, SEEK_END);
+    int size = ftell(fp) + 1;
+    rewind(fp);
+
+    return size;
+}
